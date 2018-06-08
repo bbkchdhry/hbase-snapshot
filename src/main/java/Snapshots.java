@@ -1,9 +1,11 @@
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
@@ -34,7 +36,7 @@ public class Snapshots {
     public void zip_t() throws IOException, InterruptedException {
 
         String[] command = { "bash", "-c", "cd /home/saque/hbase-snapshots/"+ date +
-                " && tar -czvf hbase-snapshot.tar.gz .hbase-snapshot && rm -rf .hbase-snapshot"};
+                " && tar -czvf hbase-snapshot.tar.gz .hbase-snapshot archive && rm -rf .hbase-snapshot archive"};
 
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -57,7 +59,8 @@ public class Snapshots {
      */
     public void copyToHDFS() throws IOException, InterruptedException {
 
-        String[] command = { "bash", "-c", "cd /home/saque/hbase-snapshots/" +
+        String[] command = { "bash", "-c", "/home/saque/hadoopec/hadoop/bin/hadoop fs -rm -r /hbase-snapshots/" + date +
+                " && cd /home/saque/hbase-snapshots/" +
                 " && /home/saque/hadoopec/hadoop/bin/hadoop fs -put " + date + " /hbase-snapshots" +
                 " && rm -rf " + date};
 
@@ -121,7 +124,6 @@ public class Snapshots {
         }else{
             log.info(" Snapshots created successfully");
         }
-
     }
 
     /**
@@ -132,14 +134,13 @@ public class Snapshots {
      */
     public void getSnapshot() throws IOException, InterruptedException {
 
-        String[] command = {"bash", "-c", "cd /home/saque/hbase-snapshots && mkdir "+ date + " && cd " + date +
-                " && /home/saque/hadoopec/hadoop/bin/hadoop fs -get /hbase/.hbase-snapshot"};
+        String[] command = {"bash", "-c", "/home/saque/hadoopec/hadoop/bin/hadoop fs -get /hbase-snapshots/" + date };
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();
 
         if(process.waitFor()==0){
-            log.info(" Snapshot Copied Successfully");
+            log.info(" Snapshot Copied Successfully in local file system");
 
             /**********zip today's snapshots**********/
             zip_t();
@@ -149,20 +150,63 @@ public class Snapshots {
         }
     }
 
+    /**
+     * Exports HBase Snapshots in HDFS for backup and to create archive files
+     *
+     * @param snapshot_name
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void exportSnapshot(String snapshot_name) throws IOException, InterruptedException {
+        String[] command = {"bash", "-c", "/home/saque/hadoopec/hbase/bin/hbase org.apache.hadoop.hbase.snapshot.ExportSnapshot -snapshot " +
+                snapshot_name + " -copy-to /hbase-snapshots/" + date};
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        Process process = processBuilder.start();
+
+        if(process.waitFor()==0){
+            log.info(" " + snapshot_name + " Exported Successfully");
+
+        }else {
+            log.error(" Failed to Export Snapshot => " + snapshot_name);
+        }
+    }
 
     /**
      * Lists all snapshots of HBase table
      *
      * @param connection
      * @throws IOException
+     * @throws InterruptedException
      */
-    public void listSnapshot(Connection connection) throws IOException {
+    public void listSnapshot(Connection connection) throws IOException, InterruptedException {
+
+        String[] command = {"bash", "-c", "/home/saque/hadoopec/hadoop/bin/hadoop fs -mkdir /hbase-snapshots/"+ date };
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        Process process = processBuilder.start();
+
+        if(process.waitFor()==0){
+            log.info(" Folder created successfully to store snapshots in hdfs");
+
+        }else {
+            log.error(" Failed to create a new folder to store snapshots in hdfs");
+        }
+
+        System.out.println("\n********************Listing snapshots********************\n");
 
         HBaseAdmin admin = (HBaseAdmin) connection.getAdmin();
-        List snapshots = admin.listSnapshots();
-        System.out.println("Listing snapshots");
-        for(Object snapshot : snapshots){
-            System.out.println(snapshot);
+
+        List<HBaseProtos.SnapshotDescription> snapshots = admin.listSnapshots();
+
+        for(HBaseProtos.SnapshotDescription snapshot : snapshots){
+            String snapshot_name = snapshot.getName();
+
+            System.out.println(snapshot_name);
+
+            /*********************************Export Snapshots in HDFS for backup*********************************/
+            exportSnapshot(snapshot_name);
+
         }
     }
 
