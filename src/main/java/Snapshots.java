@@ -5,7 +5,6 @@ import org.apache.hadoop.hbase.protobuf.generated.HBaseProtos;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
@@ -52,7 +51,7 @@ public class Snapshots {
 
     /**
      * Copies snapshots from local system to HDFS and removes from local system.
-     * If successful it calls remove_y() function
+     * If successful it calls remove_old_snapshots() function
      *
      * @throws IOException
      * @throws InterruptedException
@@ -71,7 +70,7 @@ public class Snapshots {
             log.info(" Successfully Stored hbase snapshots to HDFS");
 
             /**********remove yesterday's snapshots**********/
-            remove_y();
+            remove_old_snapshots();
         }else {
             log.error(" Failed to store snapshots in HDFS from local");
         }
@@ -83,9 +82,9 @@ public class Snapshots {
      * @throws IOException
      * @throws InterruptedException
      */
-    public void remove_y() throws IOException, InterruptedException {
-        String y_date = LocalDate.parse(date).minusDays(1).toString();
-        String[] command = {"bash", "-c", "/home/saque/hadoopec/hadoop/bin/hadoop fs -rm -r /hbase-snapshots/"+ y_date};
+    public void remove_old_snapshots() throws IOException, InterruptedException {
+        String four_days_before = LocalDate.parse(date).minusDays(4).toString();
+        String[] command = {"bash", "-c", "/home/saque/hadoopec/hadoop/bin/hadoop fs -rm -r /hbase-snapshots/"+ four_days_before};
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();
 
@@ -159,7 +158,7 @@ public class Snapshots {
      */
     public void exportSnapshot(String snapshot_name) throws IOException, InterruptedException {
         String[] command = {"bash", "-c", "/home/saque/hadoopec/hbase/bin/hbase org.apache.hadoop.hbase.snapshot.ExportSnapshot -snapshot " +
-                snapshot_name + " -copy-to /hbase-snapshots/" + date};
+                snapshot_name + " -copy-to /hbase-snapshots/" + date + " -mappers 20"};
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();
