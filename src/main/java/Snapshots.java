@@ -34,19 +34,27 @@ public class Snapshots {
      */
     public void zip_t() throws IOException, InterruptedException {
 
-        String[] command = { "bash", "-c", "cd /home/saque/hbase-snapshots/"+ date +
-                " && tar -czvf hbase-snapshot.tar.gz .hbase-snapshot archive && rm -rf .hbase-snapshot archive"};
+        log.info(" Starting to zip snapshots");
+        String source_folder = "/home/saque/hbase-snapshots/"+date;
+        TarGZIP tGzipDemo = new TarGZIP();
+        tGzipDemo.createTarFile(source_folder, date);
+        log.info(" Snapshots zipped successfully");
+
+        String[] command = { "bash", "-c", "cd /home/saque/hbase-snapshots/"+
+                " && mv hbase-snapshot.tar.gz " + date + " && cd /home/saque/hbase-snapshots/" + date +
+                " && rm -rf .hbase-snapshot archive"};
 
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();
 
         if(process.waitFor()==0){
-            log.info(" Successfully zipped hbase snapshots");
+            log.info(" Snapshots ready to be copied in HDFS");
             copyToHDFS();
         }else {
-            log.error(" Failed to zip snapshots");
+            log.error(" Couldn't move tar file in "+date);
         }
+
     }
 
     /**
