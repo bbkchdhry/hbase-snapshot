@@ -110,6 +110,9 @@ public class Snapshots {
      * @throws IOException
      */
     public void createSnapshot(Connection connection) throws IOException {
+        // Deletes snapshots if exists and creates new one
+        deleteAllSnapshot(connection);
+
         // Instantiating HbaseAdmin class
         HBaseAdmin admin = (HBaseAdmin) connection.getAdmin();
 
