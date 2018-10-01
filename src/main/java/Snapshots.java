@@ -110,29 +110,38 @@ public class Snapshots {
      * @throws IOException
      */
     public void createSnapshot(Connection connection) throws IOException {
-        // Deletes snapshots if exists and creates new one
-        deleteAllSnapshot(connection);
+        try {
+            // Deletes snapshots if exists and creates new one
+            deleteAllSnapshot(connection);
 
-        // Instantiating HbaseAdmin class
-        HBaseAdmin admin = (HBaseAdmin) connection.getAdmin();
+            // Instantiating HbaseAdmin class
+            HBaseAdmin admin = (HBaseAdmin) connection.getAdmin();
 
-        HTableDescriptor[] hTableDescriptors = admin.listTables();
+            HTableDescriptor[] hTableDescriptors = admin.listTables();
 
-        for(HTableDescriptor tableDescriptor: hTableDescriptors){
-            String table_name = tableDescriptor.getNameAsString();
+            for(HTableDescriptor tableDescriptor: hTableDescriptors){
+                String table_name = tableDescriptor.getNameAsString();
 
-            // Creating a Snapshot for table
-            System.out.println("Table names: "+ table_name);
-            String snapshot_name = table_name+"_SNAPSHOT";
-            admin.snapshot(snapshot_name, table_name);
-        }
+                if(table_name.contains(":")){
+                    table_name = table_name.replace(":", "_");
+                }
 
-        List snapshots = admin.listSnapshots();
-        if(snapshots.isEmpty()){
-            log.error(" Snapshots cannot be created");
+                // Creating a Snapshot for table
+                System.out.println("Table names: "+ table_name);
+                String snapshot_name = table_name+"_SNAPSHOT";
+                admin.snapshot(snapshot_name, table_name);
+            }
 
-        }else{
-            log.info(" Snapshots created successfully");
+            List snapshots = admin.listSnapshots();
+            if(snapshots.isEmpty()){
+                log.error(" Snapshots cannot be created");
+
+            }else{
+                log.info(" Snapshots created successfully");
+            }
+        }catch (Exception e){
+            log.error("Error while creating snapshot");
+            log.error(e);
         }
     }
 
