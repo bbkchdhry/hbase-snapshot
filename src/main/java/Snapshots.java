@@ -119,16 +119,20 @@ public class Snapshots {
 
             HTableDescriptor[] hTableDescriptors = admin.listTables();
 
+            String snapshot_name = null;
+
             for(HTableDescriptor tableDescriptor: hTableDescriptors){
                 String table_name = tableDescriptor.getNameAsString();
 
                 if(table_name.contains(":")){
-                    table_name = table_name.replace(":", "_");
+                    snapshot_name = table_name.replace(":", "_")+"_SNAPSHOT";
+                }else{
+                    snapshot_name = table_name+"_SNAPSHOT";
                 }
 
                 // Creating a Snapshot for table
-                System.out.println("Table names: "+ table_name);
-                String snapshot_name = table_name+"_SNAPSHOT";
+                System.out.println("Table name: "+ table_name);
+                System.out.println("Snapshot name: "+ snapshot_name);
                 admin.snapshot(snapshot_name, table_name);
             }
 
