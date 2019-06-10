@@ -23,7 +23,7 @@ public class Configuration {
     public static Connection createConnection() throws IOException {
 
 //        String hbaseZkQuorum="10.10.5.30,10.10.5.31,10.10.5.32,10.10.5.33";
-        String hbaseZkQuorum="10.10.5.20,10.10.5.21,10.10.5.22,10.10.5.23,10.10.5.24,10.10.5.25";
+        String hbaseZkQuorum="10.10.5.21,10.10.5.22,10.10.5.23,10.10.5.24,10.10.5.29";
 
         // Instantiating configuration class
         org.apache.hadoop.conf.Configuration conf = HBaseConfiguration.create();
