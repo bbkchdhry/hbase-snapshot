@@ -37,7 +37,7 @@ public class Snapshots {
         log.info(" Starting to zip snapshots");
         String source_folder = "/home/saque/hbase-snapshots/"+date;
         TarGZIP tGzipDemo = new TarGZIP();
-        tGzipDemo.createTarFile(source_folder, date);
+        tGzipDemo.createTarFile(source_folder);
         log.info(" Snapshots zipped successfully");
 
         String[] command = { "bash", "-c", "cd /home/saque/hbase-snapshots/"+
@@ -157,7 +157,7 @@ public class Snapshots {
      */
     public void getSnapshot() throws IOException, InterruptedException {
 
-        String[] command = {"bash", "-c", "/home/saque/hadoopec/hadoop/bin/hadoop fs -get /hbase-snapshots/" + date };
+        String[] command = {"bash", "-c", "cd /home/saque/hbase-snapshots && /home/saque/hadoopec/hadoop/bin/hadoop fs -get /hbase-snapshots/" + date };
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         Process process = processBuilder.start();

@@ -16,7 +16,7 @@ public class TarGZIP {
      *
      * @param source
      */
-    public void createTarFile(String source, String date){
+    public void createTarFile(String source){
         TarArchiveOutputStream tarOs = null;
         try {
             FileOutputStream fos = new FileOutputStream("/home/saque/hbase-snapshots/hbase-snapshot.tar.gz");
